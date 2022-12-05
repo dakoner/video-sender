@@ -50,9 +50,6 @@ class UVCCamera(QtCore.QObject):
         
         self.worker = None
 
-    def initialize(self):
-        pass
-
     def callback(self, d, w, h, s):
         self.imageChanged.emit(d, w, h, s)
 
