@@ -30,6 +30,7 @@ class Worker(QtCore.QThread):
             height = image_result.GetHeight()
             stride = image_result.GetStride()
             d = image_result.GetData()
+            d= d.reshape((height,width,1))
             
             self.imageChanged.emit(d, width, height, stride)
 
@@ -40,31 +41,20 @@ class PySpinCamera(QtCore.QObject):
     acquisitionModeChanged = QtCore.pyqtSignal(bool)
     imageChanged = QtCore.pyqtSignal(np.ndarray, int, int, int)
 
-    def __init__(self, camera, parent=None):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.system = PySpin.System.GetInstance()
         self.cam_list = self.system.GetCameras()
-        self.cam = self.cam_list[0]
-        self.camera = PySpinCamera(self.cam)
-        self.camera.imageChanged.connect(self.camera_callback, QtCore.Qt.DirectConnection)
-        self.camera.initialize()
+        self.camera = self.cam_list[0]
+        self.camera.Init()
         self.camera.acquisitionMode = 'Continuous'
         self.camera.autoExposureMode = True
 
-        self.camera = camera
-
-        
         self.worker = None
        
-
         self.nodemap_tldevice = self.camera.GetTLDeviceNodeMap()
         self.camera.Init()
         self.nodemap = self.camera.GetNodeMap()
-
-        self.camera.begin()
-
-    def initialize(self):
-        return self.camera.Init()
 
     def callback(self, d, w, h, s):
         self.imageChanged.emit(d, w, h, s)
