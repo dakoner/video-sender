@@ -1,0 +1,50 @@
+#!/bin/env python
+import time
+from PyQt5 import QtCore
+import signal
+import imagezmq
+import simplejpeg
+import sys
+import numpy as np
+
+#from video_sender.pyspin_camera import pyspin_camera_qobject
+from video_sender.uvc_camera import uvc_camera_qobject
+
+port = 5000
+IMAGE_TIMEOUT=0.1
+
+class VideoSender(QtCore.QCoreApplication):
+    
+    def __init__(self, argv):
+        super().__init__(argv)
+        self.sender = imagezmq.ImageSender("tcp://*:{}".format(port), REQ_REP=False)
+        self.t0 = time.time()
+        self.u = uvc_camera_qobject.UVCCamera('/dev/video0')
+        self.u.initialize()
+        self.u.imageChanged.connect(self.camera_callback)
+        self.u.begin()
+        
+    def camera_callback(self, img, width, height, stride):
+        t0 = time.time()
+        if t0 - self.t0 < IMAGE_TIMEOUT:
+            return
+        self.t0 = t0
+        if img.shape[2] == 1:
+            colorspace = 'GRAY'
+        elif img.shape[2] == 3:
+            colorspace = 'RGB'
+        jpg_buffer = simplejpeg.encode_jpeg(img, quality=100, colorspace=colorspace)
+            
+        self.sender.send_jpg((time.time(), colorspace), jpg_buffer)
+        
+
+
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    q = VideoSender(sys.argv)
+    q.exec_()
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,5 @@
+nump
+simplejpeg
+pyzmq
+opencv-python
+pyqt5
