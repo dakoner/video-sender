@@ -7,7 +7,7 @@ import simplejpeg
 import sys
 import numpy as np
 
-#from video_sender.pyspin_camera import pyspin_camera_qobject
+from video_sender.pyspin_camera import pyspin_camera_qobject
 from video_sender.uvc_camera import uvc_camera_qobject
 
 port = 5000
@@ -19,10 +19,13 @@ class VideoSender(QtCore.QCoreApplication):
         super().__init__(argv)
         self.sender = imagezmq.ImageSender("tcp://*:{}".format(port), REQ_REP=False)
         self.t0 = time.time()
-        self.u = uvc_camera_qobject.UVCCamera('/dev/video0')
-        self.u.initialize()
-        self.u.imageChanged.connect(self.camera_callback)
-        self.u.begin()
+        # self.u = uvc_camera_qobject.UVCCamera('/dev/video0')
+        # self.u.imageChanged.connect(self.camera_callback)
+        # self.u.begin()
+
+        self.p = pyspin_camera_qobject.PySpinCamera()
+        self.p.imageChanged.connect(self.camera_callback)
+        self.p.begin()
         
     def camera_callback(self, img, width, height, stride):
         t0 = time.time()

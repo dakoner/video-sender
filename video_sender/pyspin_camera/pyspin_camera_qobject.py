@@ -24,7 +24,8 @@ class Worker(QtCore.QThread):
     def acquire_callback(self):
         image_result = self.camera.GetNextImage()
         if image_result.IsIncomplete():
-            print('Image incomplete with image status %d ...' % image_result.GetImageStatus())
+            pass
+            #print('Image incomplete with image status %d ...' % image_result.GetImageStatus())
         else:
             width = image_result.GetWidth()
             height = image_result.GetHeight()

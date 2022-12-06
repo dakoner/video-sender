@@ -1,5 +1,6 @@
-nump
+numpy
 simplejpeg
 pyzmq
 opencv-python
 pyqt5
+imagezmq
