@@ -25,6 +25,16 @@ class VideoSender(QtCore.QCoreApplication):
 
         self.p = pyspin_camera_qobject.PySpinCamera()
         self.p.imageChanged.connect(self.camera_callback)
+        
+        self.p.AcquisitionMode = 'Continuous'
+        self.p.ExposureAuto = 'Off'
+        self.p.ExposureMode = 'Timed'
+        self.p.ExposureTime = 20
+        self.p.TriggerMode = 'Off'
+        self.p.TriggerSelector = 'FrameStart'
+        self.p.TriggerActivation = 'RisingEdge'
+        self.p.StreamBufferHandlingMode = 'NewestOnly'
+        
         self.p.begin()
         
     def camera_callback(self, img, width, height, stride):
