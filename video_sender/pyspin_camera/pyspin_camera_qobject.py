@@ -54,8 +54,10 @@ class Worker(QtCore.QThread):
 
 class PySpinCamera(QtCore.QObject):
     exposureChanged = QtCore.pyqtSignal(float)
-    autoExposureModeChanged = QtCore.pyqtSignal(bool)
+    ExposureAutoChanged = QtCore.pyqtSignal(bool)
+    ExposureModeChanged = QtCore.pyqtSignal(bool)
     acquisitionModeChanged = QtCore.pyqtSignal(bool)
+    triggerModeChanged = QtCore.pyqtSignal(bool)
     bufferHandlingModeChanged = QtCore.pyqtSignal(bool)
     imageChanged = QtCore.pyqtSignal(np.ndarray, int, int, int)
     def __init__(self):
@@ -73,8 +75,10 @@ class PySpinCamera(QtCore.QObject):
         self.nodemap_tldevice = self.camera.GetTLDeviceNodeMap()
         self.nodemap = self.camera.GetNodeMap()
         self.nodemap_stream = self.camera.GetTLStreamNodeMap()
-        self.acquisitionMode = 'SingleFrame'
-        self.autoExposureMode = True
+        self.acquisitionMode = 'Continuous'
+        self.ExposureAuto = 'Off'
+        self.ExposureMode = 'Timed'
+        self.triggerMode = 'Off'
         self.bufferHandlingMode = 'NewestOnly'
 
         self.worker = None
@@ -111,6 +115,24 @@ class PySpinCamera(QtCore.QObject):
         node_acquisition_mode.SetIntValue(acquisitionMode_value)
         self.acquisitionModeChanged.emit(node_acquisition_mode.GetIntValue()) 
 
+
+    @QtCore.pyqtProperty(str, notify=triggerModeChanged)
+    def triggerMode(self):
+        return self.camera.triggerMode.ToString()
+
+    @triggerMode.setter
+    def triggerMode(self, triggerMode):
+        node_trigger_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('TriggerMode'))
+        triggerMode_entry = node_trigger_mode.GetEntryByName(triggerMode)
+        if triggerMode_entry == None:
+            print("Invalid trigger mode", triggerMode)
+            return
+        triggerMode_value = triggerMode_entry.GetValue()
+        if triggerMode_value == node_trigger_mode.GetIntValue():
+                return
+        node_trigger_mode.SetIntValue(triggerMode_value)
+        self.triggerModeChanged.emit(node_trigger_mode.GetIntValue()) 
+
     @QtCore.pyqtProperty(str, notify=bufferHandlingModeChanged)
     def bufferHandlingMode(self):
         return self.camera.bufferHandlingMode.ToString()
@@ -118,7 +140,6 @@ class PySpinCamera(QtCore.QObject):
     @bufferHandlingMode.setter
     def bufferHandlingMode(self, bufferHandlingMode):
         node_streamBufferHandlingMode = PySpin.CEnumerationPtr(self.nodemap_stream.GetNode('StreamBufferHandlingMode'))
-        print(node_streamBufferHandlingMode)
         bufferHandlingMode_entry = node_streamBufferHandlingMode.GetEntryByName(bufferHandlingMode)
         if bufferHandlingMode_entry == None:
             print("Invalid buffer handling mode", bufferHandlingMode)
@@ -130,35 +151,42 @@ class PySpinCamera(QtCore.QObject):
         self.bufferHandlingModeChanged.emit(node_streamBufferHandlingMode.GetIntValue()) 
 
 
+    @QtCore.pyqtProperty(str, notify=ExposureAutoChanged)
+    def ExposureAuto(self):
+        return self.camera.ExposureAuto.ToString()
 
-    @QtCore.pyqtProperty(bool)#, notify=autoExposureModeChanged)
-    def autoExposureMode(self):
-        try:
-            node_autoExposure_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('ExposureAuto'))    
-            currentValue = node_autoExposure_mode.GetIntValue()
-            if currentValue == PySpin.ExposureAuto_Off: returnValue= False
-            elif currentValue == PySpin.ExposureAuto_Continuous: returnValue= True
-            return returnValue
-        except:
-            import traceback
-            traceback.print_exc()
+    @ExposureAuto.setter
+    def ExposureAuto(self, ExposureAuto):
+        node_ExposureAuto = PySpin.CEnumerationPtr(self.nodemap.GetNode('ExposureAuto'))
+        ExposureAuto_entry = node_ExposureAuto.GetEntryByName(ExposureAuto)
+        if ExposureAuto_entry == None:
+            print("Invalid auto exposure mode", ExposureAuto)
+            return
+        ExposureAuto_value = ExposureAuto_entry.GetValue()
+        if ExposureAuto_value == node_ExposureAuto.GetIntValue():
+            return
+        node_ExposureAuto.SetIntValue(ExposureAuto_value)
+        self.ExposureAutoChanged.emit(node_autoExposureMode.GetIntValue()) 
 
-    @autoExposureMode.setter
-    def autoExposureMode(self, autoExposureMode):
-        currentValue = self.camera.ExposureAuto.GetValue()
-        if autoExposureMode is False:
-            if currentValue is PySpin.ExposureAuto_Off: return
-            self.camera.ExposureAuto.SetValue(PySpin.ExposureAuto_Off)
 
-        elif autoExposureMode is True:
-            if currentValue is PySpin.ExposureAuto_Continuous: return
-            self.camera.ExposureAuto.SetValue(PySpin.ExposureAuto_Continuous)
 
-        currentValue = self.camera.ExposureAuto.GetValue()
 
-        if currentValue == PySpin.ExposureAuto_Off: returnValue= False
-        elif currentValue == PySpin.ExposureAuto_Continuous: returnValue= True
-        self.autoExposureModeChanged.emit(returnValue) 
+    @QtCore.pyqtProperty(str, notify=ExposureModeChanged)
+    def ExposureMode(self):
+        return self.camera.ExposureMode.ToString()
+
+    @ExposureMode.setter
+    def ExposureMode(self, ExposureMode):
+        node_ExposureMode = PySpin.CEnumerationPtr(self.nodemap.GetNode('ExposureMode'))
+        ExposureMode_entry = node_ExposureMode.GetEntryByName(ExposureMode)
+        if ExposureMode_entry == None:
+            print("Invalid exposure mode", ExposureMode)
+            return
+        ExposureMode_value = ExposureMode_entry.GetValue()
+        if ExposureMode_value == node_ExposureMode.GetIntValue():
+            return
+        node_ExposureMode.SetIntValue(ExposureMode_value)
+        self.ExposureModeChanged.emit(node_autoExposureMode.GetIntValue()) 
 
     @QtCore.pyqtProperty(float, notify=exposureChanged)
     def exposure(self):
@@ -166,7 +194,7 @@ class PySpinCamera(QtCore.QObject):
 
     @exposure.setter
     def exposure(self, exposure):
-        print("Autoexposure value:",  self.camera.ExposureAuto.GetValue())
+        print("Autoexposure value:",  self.camera.ExposureTime.GetValue())
         if exposure == self.camera.ExposureTime.GetValue():
             return
         self.camera.ExposureTime.SetValue(exposure)
