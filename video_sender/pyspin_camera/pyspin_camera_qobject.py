@@ -78,16 +78,6 @@ class PySpinCamera(QtCore.QObject):
         self.nodemap_tldevice = self.camera.GetTLDeviceNodeMap()
         self.nodemap = self.camera.GetNodeMap()
         self.nodemap_stream = self.camera.GetTLStreamNodeMap()
-
-        self.AcquisitionMode = 'Continuous'
-        self.ExposureAuto = 'Off'
-        self.ExposureMode = 'Timed'
-        self.ExposureTime = 20
-        self.TriggerMode = 'Off'
-        self.TriggerSelector = 'FrameStart'
-        self.TriggerActivation = 'RisingEdge'
-        self.StreamBufferHandlingMode = 'NewestOnly'
-
         self.worker = None
        
 
