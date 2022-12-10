@@ -28,28 +28,40 @@ class Worker(QtCore.QThread):
     def __init__(self, camera):
         super().__init__()
         self.camera = camera
+        self.finish = False
 
-        
+    def __del__(self):
+        print("worker cleanup")
+
     @QtCore.pyqtSlot()
     def run(self):
         while True:
+            if self.finish:
+                print("worker done")
+                return
             self.acquire_callback()
-        
+    
+    def stop(self):
+        print("stopping")
+        self.finish = True
 
     def acquire_callback(self):
-        image_result = self.camera.GetNextImage()
+        print("acquire callback: wait for image")
+        try:
+            image_result = self.camera.GetNextImage(33)
+        except:
+            #print("no image")
+            return
         if image_result.IsIncomplete():
-            pass
-            #print('Image incomplete with image status %d ...' % image_result.GetImageStatus())
-        else:
-            print(image_result.GetTimeStamp())
-            width = image_result.GetWidth()
-            height = image_result.GetHeight()
-            stride = image_result.GetStride()
-            d = image_result.GetData()
-            d= d.reshape((height,width,1))
-            
-            self.imageChanged.emit(d, width, height, stride)
+            print('Image incomplete with image status %d ...' % image_result.GetImageStatus())
+            return
+        print("Image", image_result.GetTimeStamp())
+        width = image_result.GetWidth()
+        height = image_result.GetHeight()
+        stride = image_result.GetStride()
+        d = np.expand_dims(image_result.GetNDArray(), axis=2)
+        image_result.Release()
+        self.imageChanged.emit(d, width, height, stride)
 
 
 class PySpinCamera(QtCore.QObject):
@@ -68,9 +80,9 @@ class PySpinCamera(QtCore.QObject):
         self.system = PySpin.System.GetInstance()
         self.cam_list = self.system.GetCameras()
         self.camera = self.cam_list[0]
-        self.logging_event_handler = LoggingEventHandler()
-        self.system.RegisterLoggingEventHandler(self.logging_event_handler)
-        self.system.SetLoggingEventPriorityLevel(LOGGING_LEVEL)
+        # self.logging_event_handler = LoggingEventHandler()
+        # self.system.RegisterLoggingEventHandler(self.logging_event_handler)
+        # self.system.SetLoggingEventPriorityLevel(LOGGING_LEVEL)
         self.init()
 
     def init(self):
@@ -84,15 +96,18 @@ class PySpinCamera(QtCore.QObject):
     def callback(self, d, w, h, s):
         self.imageChanged.emit(d, w, h, s)
 
-    def begin(self):
+    def startWorker(self):
         self.worker = Worker(self.camera)
         self.worker.imageChanged.connect(self.callback, QtCore.Qt.DirectConnection)
         self.worker.start()
+    def stopWorker(self):
+        self.worker.stop()
+        del self.worker
+
+    def begin(self):
         self.camera.BeginAcquisition()
 
     def end(self):
-        self.worker.terminate()
-        self.worker = None
         self.camera.EndAcquisition()
 
     @QtCore.pyqtProperty(str, notify=AcquisitionModeChanged)
@@ -237,7 +252,7 @@ class PySpinCamera(QtCore.QObject):
         if ExposureMode_value == node_ExposureMode.GetIntValue():
             return
         node_ExposureMode.SetIntValue(ExposureMode_value)
-        self.ExposureModeChanged.emit(node_autoExposureMode.GetIntValue()) 
+        self.ExposureModeChanged.emit(node_ExposureMode.GetIntValue()) 
 
     @QtCore.pyqtProperty(float, notify=ExposureTimeChanged)
     def ExposureTime(self):
