@@ -29,7 +29,7 @@ class VideoSender(QtCore.QCoreApplication):
         self.p.AcquisitionMode = 'Continuous'
         self.p.ExposureAuto = 'Off'
         self.p.ExposureMode = 'Timed'
-        self.p.ExposureTime = 20
+        self.p.ExposureTime = 251
         self.p.TriggerMode = 'Off'
         self.p.TriggerSelector = 'FrameStart'
         self.p.TriggerActivation = 'RisingEdge'
