@@ -53,12 +53,14 @@ class Worker(QtCore.QThread):
 
 
 class PySpinCamera(QtCore.QObject):
-    exposureChanged = QtCore.pyqtSignal(float)
+    ExposureTimeChanged = QtCore.pyqtSignal(float)
     ExposureAutoChanged = QtCore.pyqtSignal(bool)
     ExposureModeChanged = QtCore.pyqtSignal(bool)
-    acquisitionModeChanged = QtCore.pyqtSignal(bool)
-    triggerModeChanged = QtCore.pyqtSignal(bool)
-    bufferHandlingModeChanged = QtCore.pyqtSignal(bool)
+    AcquisitionModeChanged = QtCore.pyqtSignal(bool)
+    TriggerModeChanged = QtCore.pyqtSignal(bool)
+    TriggerSelectorChanged = QtCore.pyqtSignal(bool)
+    TriggerSourceChanged = QtCore.pyqtSignal(bool)
+    StreamBufferHandlingModeChanged = QtCore.pyqtSignal(bool)
     imageChanged = QtCore.pyqtSignal(np.ndarray, int, int, int)
     def __init__(self):
         super().__init__()
@@ -75,11 +77,12 @@ class PySpinCamera(QtCore.QObject):
         self.nodemap_tldevice = self.camera.GetTLDeviceNodeMap()
         self.nodemap = self.camera.GetNodeMap()
         self.nodemap_stream = self.camera.GetTLStreamNodeMap()
-        self.acquisitionMode = 'Continuous'
+        self.AcquisitionMode = 'SingleFrame'
         self.ExposureAuto = 'Off'
         self.ExposureMode = 'Timed'
-        self.triggerMode = 'Off'
-        self.bufferHandlingMode = 'NewestOnly'
+        self.TriggerMode = 'Off'
+        self.TriggerSelector = 'FrameStart'
+        self.StreamBufferHandlingMode = 'NewestOnly'
 
         self.worker = None
        
@@ -98,57 +101,93 @@ class PySpinCamera(QtCore.QObject):
         self.worker = None
         self.camera.EndAcquisition()
 
-    @QtCore.pyqtProperty(str, notify=acquisitionModeChanged)
-    def acquisitionMode(self):
+    @QtCore.pyqtProperty(str, notify=AcquisitionModeChanged)
+    def AcquisitionMode(self):
         return self.camera.AcquisitionMode.ToString()
 
-    @acquisitionMode.setter
-    def acquisitionMode(self, acquisitionMode):
+    @AcquisitionMode.setter
+    def AcquisitionMode(self, acquisition_mode):
         node_acquisition_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('AcquisitionMode'))
-        acquisitionMode_entry = node_acquisition_mode.GetEntryByName(acquisitionMode)
-        if acquisitionMode_entry == None:
-            print("Invalid acquisition mode", acquisitionMode)
+        AcquisitionMode_entry = node_acquisition_mode.GetEntryByName(acquisition_mode)
+        if AcquisitionMode_entry == None:
+            print("Invalid acquisition mode", acquisition_mode)
             return
-        acquisitionMode_value = acquisitionMode_entry.GetValue()
-        if acquisitionMode_value == node_acquisition_mode.GetIntValue():
+        AcquisitionMode_value = AcquisitionMode_entry.GetValue()
+        if AcquisitionMode_value == node_acquisition_mode.GetIntValue():
                 return
-        node_acquisition_mode.SetIntValue(acquisitionMode_value)
-        self.acquisitionModeChanged.emit(node_acquisition_mode.GetIntValue()) 
+        node_acquisition_mode.SetIntValue(AcquisitionMode_value)
+        self.AcquisitionModeChanged.emit(node_acquisition_mode.GetIntValue()) 
 
 
-    @QtCore.pyqtProperty(str, notify=triggerModeChanged)
-    def triggerMode(self):
-        return self.camera.triggerMode.ToString()
+    @QtCore.pyqtProperty(str, notify=TriggerModeChanged)
+    def TriggerMode(self):
+        return self.camera.TriggerMode.ToString()
 
-    @triggerMode.setter
-    def triggerMode(self, triggerMode):
+    @TriggerMode.setter
+    def TriggerMode(self, trigger_mode):
         node_trigger_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('TriggerMode'))
-        triggerMode_entry = node_trigger_mode.GetEntryByName(triggerMode)
-        if triggerMode_entry == None:
-            print("Invalid trigger mode", triggerMode)
+        TriggerMode_entry = node_trigger_mode.GetEntryByName(trigger_mode)
+        if TriggerMode_entry == None:
+            print("Invalid trigger mode", trigger_mode)
             return
-        triggerMode_value = triggerMode_entry.GetValue()
-        if triggerMode_value == node_trigger_mode.GetIntValue():
+        TriggerMode_value = TriggerMode_entry.GetValue()
+        if TriggerMode_value == node_trigger_mode.GetIntValue():
                 return
-        node_trigger_mode.SetIntValue(triggerMode_value)
+        node_trigger_mode.SetIntValue(TriggerMode_value)
         self.triggerModeChanged.emit(node_trigger_mode.GetIntValue()) 
 
-    @QtCore.pyqtProperty(str, notify=bufferHandlingModeChanged)
-    def bufferHandlingMode(self):
-        return self.camera.bufferHandlingMode.ToString()
 
-    @bufferHandlingMode.setter
-    def bufferHandlingMode(self, bufferHandlingMode):
+    @QtCore.pyqtProperty(str, notify=TriggerSelectorChanged)
+    def TriggerSelector(self):
+        return self.camera.TriggerSelector.ToString()
+
+    @TriggerSelector.setter
+    def TriggerSelector(self, trigger_selector):
+        node_trigger_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('TriggerSelector'))
+        TriggerSelector_entry = node_trigger_mode.GetEntryByName(trigger_selector)
+        if TriggerSelector_entry == None:
+            print("Invalid trigger mode", trigger_selector)
+            return
+        TriggerSelector_value = TriggerSelector_entry.GetValue()
+        if TriggerSelector_value == node_trigger_mode.GetIntValue():
+                return
+        node_trigger_mode.SetIntValue(TriggerSelector_value)
+        self.TriggerSelectorChanged.emit(node_trigger_mode.GetIntValue()) 
+
+
+    @QtCore.pyqtProperty(str, notify=TriggerSourceChanged)
+    def TriggerSource(self):
+        return self.camera.TriggerSource.ToString()
+
+    @TriggerSource.setter
+    def TriggerSource(self, trigger_source):
+        node_trigger_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('TriggerSource'))
+        TriggerSource_entry = node_trigger_mode.GetEntryByName(trigger_source)
+        if TriggerSource_entry == None:
+            print("Invalid trigger mode", trigger_source)
+            return
+        TriggerSource_value = TriggerSource_entry.GetValue()
+        if TriggerSource_value == node_trigger_mode.GetIntValue():
+                return
+        node_trigger_mode.SetIntValue(TriggerSource_value)
+        self.TriggerSourceChanged.emit(node_trigger_mode.GetIntValue()) 
+
+    @QtCore.pyqtProperty(str, notify=StreamBufferHandlingModeChanged)
+    def StreamBufferHandlingMode(self):
+        return self.camera.StreamBufferHandlingMode.ToString()
+
+    @StreamBufferHandlingMode.setter
+    def StreamBufferHandlingMode(self, stream_buffer_handling_mode):
         node_streamBufferHandlingMode = PySpin.CEnumerationPtr(self.nodemap_stream.GetNode('StreamBufferHandlingMode'))
-        bufferHandlingMode_entry = node_streamBufferHandlingMode.GetEntryByName(bufferHandlingMode)
-        if bufferHandlingMode_entry == None:
-            print("Invalid buffer handling mode", bufferHandlingMode)
+        StreamBufferHandlingMode_entry = node_streamBufferHandlingMode.GetEntryByName(stream_buffer_handling_mode)
+        if StreamBufferHandlingMode_entry == None:
+            print("Invalid buffer handling mode", stream_buffer_handling_mode)
             return
-        bufferHandlingMode_value = bufferHandlingMode_entry.GetValue()
-        if bufferHandlingMode_value == node_streamBufferHandlingMode.GetIntValue():
+        StreamBufferHandlingMode_value = StreamBufferHandlingMode_entry.GetValue()
+        if StreamBufferHandlingMode_value == node_streamBufferHandlingMode.GetIntValue():
             return
-        node_streamBufferHandlingMode.SetIntValue(bufferHandlingMode_value)
-        self.bufferHandlingModeChanged.emit(node_streamBufferHandlingMode.GetIntValue()) 
+        node_streamBufferHandlingMode.SetIntValue(StreamBufferHandlingMode_value)
+        self.StreamBufferHandlingModeChanged.emit(node_streamBufferHandlingMode.GetIntValue()) 
 
 
     @QtCore.pyqtProperty(str, notify=ExposureAutoChanged)
@@ -188,12 +227,12 @@ class PySpinCamera(QtCore.QObject):
         node_ExposureMode.SetIntValue(ExposureMode_value)
         self.ExposureModeChanged.emit(node_autoExposureMode.GetIntValue()) 
 
-    @QtCore.pyqtProperty(float, notify=exposureChanged)
-    def exposure(self):
+    @QtCore.pyqtProperty(float, notify=ExposureTimeChanged)
+    def Exposure(self):
         return self.camera.ExposureTime.GetValue()
 
-    @exposure.setter
-    def exposure(self, exposure):
+    @Exposure.setter
+    def Exposure(self, exposure):
         print("Autoexposure value:",  self.camera.ExposureTime.GetValue())
         if exposure == self.camera.ExposureTime.GetValue():
             return
