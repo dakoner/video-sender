@@ -5,7 +5,22 @@ import pdb
 from PyQt5 import QtCore
 import PySpin
 
+LOGGING_LEVEL = PySpin.LOG_LEVEL_WARN
 
+class LoggingEventHandler(PySpin.LoggingEventHandler):
+
+    def __init__(self):
+        super(LoggingEventHandler, self).__init__()
+
+    def OnLogEvent(self, logging_event_data):
+        print('Category: %s' % logging_event_data.GetCategoryName())
+        print('Priority Value: %s' % logging_event_data.GetPriority())
+        print('Priority Name: %s' % logging_event_data.GetPriorityName())
+        print('Timestamp: %s' % logging_event_data.GetTimestamp())
+        print('NDC: %s' % logging_event_data.GetNDC())
+        print('Thread: %s' % logging_event_data.GetThreadName())
+        print('Message: %s' % logging_event_data.GetLogMessage())
+        print()
 
 class Worker(QtCore.QThread):
     imageChanged = QtCore.pyqtSignal(np.ndarray, int, int, int)
@@ -13,7 +28,7 @@ class Worker(QtCore.QThread):
     def __init__(self, camera):
         super().__init__()
         self.camera = camera
-        
+
         
     @QtCore.pyqtSlot()
     def run(self):
@@ -27,6 +42,7 @@ class Worker(QtCore.QThread):
             pass
             #print('Image incomplete with image status %d ...' % image_result.GetImageStatus())
         else:
+            print(image_result.GetTimeStamp())
             width = image_result.GetWidth()
             height = image_result.GetHeight()
             stride = image_result.GetStride()
@@ -40,22 +56,29 @@ class PySpinCamera(QtCore.QObject):
     exposureChanged = QtCore.pyqtSignal(float)
     autoExposureModeChanged = QtCore.pyqtSignal(bool)
     acquisitionModeChanged = QtCore.pyqtSignal(bool)
+    bufferHandlingModeChanged = QtCore.pyqtSignal(bool)
     imageChanged = QtCore.pyqtSignal(np.ndarray, int, int, int)
-
     def __init__(self):
         super().__init__()
         self.system = PySpin.System.GetInstance()
         self.cam_list = self.system.GetCameras()
         self.camera = self.cam_list[0]
+        self.logging_event_handler = LoggingEventHandler()
+        self.system.RegisterLoggingEventHandler(self.logging_event_handler)
+        self.system.SetLoggingEventPriorityLevel(LOGGING_LEVEL)
+        self.init()
+
+    def init(self):
         self.camera.Init()
-        self.camera.acquisitionMode = 'Continuous'
-        self.camera.autoExposureMode = True
+        self.nodemap_tldevice = self.camera.GetTLDeviceNodeMap()
+        self.nodemap = self.camera.GetNodeMap()
+        self.nodemap_stream = self.camera.GetTLStreamNodeMap()
+        self.acquisitionMode = 'SingleFrame'
+        self.autoExposureMode = True
+        self.bufferHandlingMode = 'NewestOnly'
 
         self.worker = None
        
-        self.nodemap_tldevice = self.camera.GetTLDeviceNodeMap()
-        self.camera.Init()
-        self.nodemap = self.camera.GetNodeMap()
 
     def callback(self, d, w, h, s):
         self.imageChanged.emit(d, w, h, s)
@@ -78,10 +101,33 @@ class PySpinCamera(QtCore.QObject):
     @acquisitionMode.setter
     def acquisitionMode(self, acquisitionMode):
         node_acquisition_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('AcquisitionMode'))
-        acquisitionMode_value = node_acquisition_mode.GetEntryByName(acquisitionMode).GetValue()
-        if acquisitionMode_value == node_acquisition_mode.GetIntValue(): return
+        acquisitionMode_entry = node_acquisition_mode.GetEntryByName(acquisitionMode)
+        if acquisitionMode_entry == None:
+            print("Invalid acquisition mode", acquisitionMode)
+            return
+        acquisitionMode_value = acquisitionMode_entry.GetValue()
+        if acquisitionMode_value == node_acquisition_mode.GetIntValue():
+                return
         node_acquisition_mode.SetIntValue(acquisitionMode_value)
         self.acquisitionModeChanged.emit(node_acquisition_mode.GetIntValue()) 
+
+    @QtCore.pyqtProperty(str, notify=bufferHandlingModeChanged)
+    def bufferHandlingMode(self):
+        return self.camera.bufferHandlingMode.ToString()
+
+    @bufferHandlingMode.setter
+    def bufferHandlingMode(self, bufferHandlingMode):
+        node_streamBufferHandlingMode = PySpin.CEnumerationPtr(self.nodemap_stream.GetNode('StreamBufferHandlingMode'))
+        print(node_streamBufferHandlingMode)
+        bufferHandlingMode_entry = node_streamBufferHandlingMode.GetEntryByName(bufferHandlingMode)
+        if bufferHandlingMode_entry == None:
+            print("Invalid buffer handling mode", bufferHandlingMode)
+            return
+        bufferHandlingMode_value = bufferHandlingMode_entry.GetValue()
+        if bufferHandlingMode_value == node_streamBufferHandlingMode.GetIntValue():
+            return
+        node_streamBufferHandlingMode.SetIntValue(bufferHandlingMode_value)
+        self.bufferHandlingModeChanged.emit(node_streamBufferHandlingMode.GetIntValue()) 
 
 
 
