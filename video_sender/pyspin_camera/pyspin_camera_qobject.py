@@ -46,16 +46,14 @@ class Worker(QtCore.QThread):
         self.finish = True
 
     def acquire_callback(self):
-        print("acquire callback: wait for image")
         try:
-            image_result = self.camera.GetNextImage(33)
+            image_result = self.camera.GetNextImage(1)
         except:
             #print("no image")
             return
         if image_result.IsIncomplete():
-            print('Image incomplete with image status %d ...' % image_result.GetImageStatus())
+            #print('Image incomplete with image status %d ...' % image_result.GetImageStatus())
             return
-        print("Image", image_result.GetTimeStamp())
         width = image_result.GetWidth()
         height = image_result.GetHeight()
         stride = image_result.GetStride()
@@ -143,7 +141,7 @@ class PySpinCamera(QtCore.QObject):
         if TriggerMode_value == node_trigger_mode.GetIntValue():
                 return
         node_trigger_mode.SetIntValue(TriggerMode_value)
-        self.triggerModeChanged.emit(node_trigger_mode.GetIntValue()) 
+        self.TriggerModeChanged.emit(node_trigger_mode.GetIntValue()) 
 
 
     @QtCore.pyqtProperty(str, notify=TriggerSelectorChanged)
@@ -232,7 +230,7 @@ class PySpinCamera(QtCore.QObject):
         if ExposureAuto_value == node_ExposureAuto.GetIntValue():
             return
         node_ExposureAuto.SetIntValue(ExposureAuto_value)
-        self.ExposureAutoChanged.emit(node_autoExposureMode.GetIntValue()) 
+        self.ExposureAutoChanged.emit(node_ExposureAuto.GetIntValue()) 
 
 
 
