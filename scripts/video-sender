@@ -9,6 +9,7 @@ import numpy as np
 
 from video_sender.pyspin_camera import pyspin_camera_qobject
 from video_sender.uvc_camera import uvc_camera_qobject
+from video_sender.gige_camera import gige_camera_qobject
 
 port = 5000
 IMAGE_TIMEOUT=0.1
@@ -23,19 +24,25 @@ class VideoSender(QtCore.QCoreApplication):
         # self.u.imageChanged.connect(self.camera_callback)
         # self.u.begin()
 
-        self.p = pyspin_camera_qobject.PySpinCamera()
-        self.p.imageChanged.connect(self.camera_callback)
+        # self.p = pyspin_camera_qobject.PySpinCamera()
+        # self.p.imageChanged.connect(self.camera_callback)
         
-        self.p.AcquisitionMode = 'Continuous'
-        self.p.ExposureAuto = 'Off'
-        self.p.ExposureMode = 'Timed'
-        self.p.ExposureTime = 251
-        self.p.TriggerMode = 'Off'
-        self.p.TriggerSelector = 'FrameStart'
-        self.p.TriggerActivation = 'RisingEdge'
-        self.p.StreamBufferHandlingMode = 'NewestOnly'
+        # self.p.AcquisitionMode = 'Continuous'
+        # self.p.ExposureAuto = 'Off'
+        # self.p.ExposureMode = 'Timed'
+        # self.p.ExposureTime = 251
+        # self.p.TriggerMode = 'Off'
+        # self.p.TriggerSelector = 'FrameStart'
+        # self.p.TriggerActivation = 'RisingEdge'
+        # self.p.StreamBufferHandlingMode = 'NewestOnly'
+
+        #self.p.begin()
         
-        self.p.begin()
+        self.g = gige_camera_qobject.GigECamera()
+        self.g.imageChanged.connect(self.camera_callback)
+        
+        
+        self.g.begin()
         
     def camera_callback(self, img, width, height, stride):
         t0 = time.time()
