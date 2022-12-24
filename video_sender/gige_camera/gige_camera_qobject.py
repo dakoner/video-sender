@@ -25,11 +25,11 @@ class Worker(QtCore.QThread):
             mvsdk.CameraSetIspOutFormat(self.hCamera, mvsdk.CAMERA_MEDIA_TYPE_MONO8)
 
         # 相机模式切换成连续采集
-        mvsdk.CameraSetTriggerMode(self.hCamera, 0)
+        mvsdk.CameraSetTriggerMode(self.hCamera, 2)
 
         # 手动曝光，曝光时间30ms
         mvsdk.CameraSetAeState(self.hCamera, 0)
-        mvsdk.CameraSetExposureTime(self.hCamera, 0)
+        mvsdk.CameraSetExposureTime(self.hCamera, 10)
 
         # 让SDK内部取图线程开始工作
         mvsdk.CameraPlay(self.hCamera)
@@ -108,61 +108,4 @@ class GigECamera(QtCore.QObject):
         self.worker.terminate()
         self.worker = None
         self.cap.release()
-
-    # @QtCore.pyqtProperty(str, notify=acquisitionModeChanged)
-    # def acquisitionMode(self):
-    #     return self.camera.AcquisitionMode.ToString()
-
-    # @acquisitionMode.setter
-    # def acquisitionMode(self, acquisitionMode):
-    #     node_acquisition_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('AcquisitionMode'))
-    #     acquisitionMode_value = node_acquisition_mode.GetEntryByName(acquisitionMode).GetValue()
-    #     if acquisitionMode_value == node_acquisition_mode.GetIntValue(): return
-    #     node_acquisition_mode.SetIntValue(acquisitionMode_value)
-    #     self.acquisitionModeChanged.emit(node_acquisition_mode.GetIntValue()) 
-
-
-
-    # @QtCore.pyqtProperty(bool)#, notify=autoExposureModeChanged)
-    # def autoExposureMode(self):
-    #     try:
-    #         node_autoExposure_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('ExposureAuto'))    
-    #         currentValue = node_autoExposure_mode.GetIntValue()
-    #         if currentValue == PySpin.ExposureAuto_Off: returnValue= False
-    #         elif currentValue == PySpin.ExposureAuto_Continuous: returnValue= True
-    #         return returnValue
-    #     except:
-    #         import traceback
-    #         traceback.print_exc()
-
-    # @autoExposureMode.setter
-    # def autoExposureMode(self, autoExposureMode):
-    #     currentValue = self.camera.ExposureAuto.GetValue()
-    #     if autoExposureMode is False:
-    #         if currentValue is PySpin.ExposureAuto_Off: return
-    #         self.camera.ExposureAuto.SetValue(PySpin.ExposureAuto_Off)
-
-    #     elif autoExposureMode is True:
-    #         if currentValue is PySpin.ExposureAuto_Continuous: return
-    #         self.camera.ExposureAuto.SetValue(PySpin.ExposureAuto_Continuous)
-
-    #     currentValue = self.camera.ExposureAuto.GetValue()
-
-    #     if currentValue == PySpin.ExposureAuto_Off: returnValue= False
-    #     elif currentValue == PySpin.ExposureAuto_Continuous: returnValue= True
-    #     self.autoExposureModeChanged.emit(returnValue) 
-
-    # @QtCore.pyqtProperty(float, notify=exposureChanged)
-    # def exposure(self):
-    #     return self.camera.ExposureTime.GetValue()
-
-    # @exposure.setter
-    # def exposure(self, exposure):
-    #     print("Autoexposure value:",  self.camera.ExposureAuto.GetValue())
-    #     if exposure == self.camera.ExposureTime.GetValue():
-    #         return
-    #     self.camera.ExposureTime.SetValue(exposure)
-    #     self.exposureChanged.emit(self.camera.ExposureTime.GetValue()) 
-        
-
 

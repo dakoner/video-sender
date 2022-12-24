@@ -1,0 +1,40 @@
+from enum import Enum
+import PySpin
+import signal
+import sys
+from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5.uic import loadUi
+
+# from video_sender.spin_widget import SpinWidget
+# from video_sender.pyspin_camera import PySpinCamera
+from video_sender.gige_camera import gige_camera_qobject
+
+
+
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        loadUi("video_viewer.ui", self)
+        
+        self.g = gige_camera_qobject.GigECamera()
+        self.g.imageChanged.connect(self.camera_callback)
+        self.g.begin()
+
+    def camera_callback(self, draw_data, width, height, stride):
+            image = QtGui.QImage(draw_data, height, width, QtGui.QImage.Format_Grayscale8)
+            pixmap = QtGui.QPixmap.fromImage(image)
+            #self.image_view.setFixedSize(s[0], s[1])
+            self.label_2.setPixmap(pixmap)
+
+class QApplication(QtWidgets.QApplication):
+    def __init__(self, *args, **kwargs):
+        super(QApplication, self).__init__(*args, **kwargs)
+
+        self.main_window = MainWindow()
+        self.main_window.show()
+
+if __name__ == '__main__':
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    app = QApplication(sys.argv)
+    app.exec_()
+
