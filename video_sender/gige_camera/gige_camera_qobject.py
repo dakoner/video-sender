@@ -6,70 +6,9 @@ from PyQt5 import QtCore
 import mvsdk
 
 
-class Worker(QtCore.QThread):
-    imageChanged = QtCore.pyqtSignal(np.ndarray, int, int, int)
-
-    def __init__(self, hCamera):
-        super().__init__()
-        self.hCamera = hCamera
-        
-        # 获取相机特性描述
-        cap = mvsdk.CameraGetCapability(self.hCamera)
-        #PrintCapbility(cap)
-
-        # 判断是黑白相机还是彩色相机
-        monoCamera = (cap.sIspCapacity.bMonoSensor != 0)
-
-        # 黑白相机让ISP直接输出MONO数据，而不是扩展成R=G=B的24位灰度
-        if monoCamera:
-            mvsdk.CameraSetIspOutFormat(self.hCamera, mvsdk.CAMERA_MEDIA_TYPE_MONO8)
-
-        # 相机模式切换成连续采集
-        mvsdk.CameraSetTriggerMode(self.hCamera, 2)
-
-        # 手动曝光，曝光时间30ms
-        mvsdk.CameraSetAeState(self.hCamera, 0)
-        mvsdk.CameraSetExposureTime(self.hCamera, 10)
-
-        # 让SDK内部取图线程开始工作
-        mvsdk.CameraPlay(self.hCamera)
-
-        
-        FrameBufferSize = cap.sResolutionRange.iWidthMax * cap.sResolutionRange.iHeightMax * (1 if monoCamera else 3)
-
-        # 分配RGB buffer，用来存放ISP输出的图像
-        # 备注：从相机传输到PC端的是RAW数据，在PC端通过软件ISP转为RGB数据（如果是黑白相机就不需要转换格式，但是ISP还有其它处理，所以也需要分配这个buffer）
-        self.pFrameBuffer = mvsdk.CameraAlignMalloc(FrameBufferSize, 16)
-
-    @QtCore.pyqtSlot()
-    def run(self):
-        while True:
-            self.acquire_callback()
-        
-
-    def acquire_callback(self):
-        # 计算RGB buffer所需的大小，这里直接按照相机的最大分辨率来分配
-
-        # 从相机取一帧图片
-        try:
-            pRawData, FrameHead = mvsdk.CameraGetImageBuffer(self.hCamera, 2000)
-            mvsdk.CameraImageProcess(self.hCamera, pRawData, self.pFrameBuffer, FrameHead)
-            mvsdk.CameraReleaseImageBuffer(self.hCamera, pRawData)
-            frame_data = (mvsdk.c_ubyte * FrameHead.uBytes).from_address(self.pFrameBuffer)
-            frame = np.frombuffer(frame_data, dtype=np.uint8)
-            frame = frame.reshape((FrameHead.iHeight, FrameHead.iWidth, 1 if FrameHead.uiMediaType == mvsdk.CAMERA_MEDIA_TYPE_MONO8 else 3) )
-
-            self.imageChanged.emit(frame, frame.shape[1], frame.shape[0], frame.shape[1])
-
-        except mvsdk.CameraException as e:
-            print("CameraGetImageBuffer failed({}): {}".format(e.error_code, e.message) )
-
-
 class GigECamera(QtCore.QObject):
-    exposureChanged = QtCore.pyqtSignal(float)
-    autoExposureModeChanged = QtCore.pyqtSignal(bool)
-    acquisitionModeChanged = QtCore.pyqtSignal(bool)
-    imageChanged = QtCore.pyqtSignal(np.ndarray, int, int, int)
+    imageChanged = QtCore.pyqtSignal(np.ndarray)
+    ExposureTimeChanged = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -86,7 +25,6 @@ class GigECamera(QtCore.QObject):
         DevInfo = DevList[i]
 
         
-        # # 打开相机
         self.hCamera = 0
         try:
             self.hCamera = mvsdk.CameraInit(DevInfo, -1, -1)
@@ -94,18 +32,59 @@ class GigECamera(QtCore.QObject):
             print("CameraInit Failed({}): {}".format(e.error_code, e.message) )
             return
 
-        self.worker = None
 
-    def callback(self, d, w, h, s):
-        self.imageChanged.emit(d, w, h, s)
+
+    @QtCore.pyqtProperty(float, notify=ExposureTimeChanged)
+    def ExposureTime(self):
+        return mvsdk.CameraGetExposureTime(self.hCamera)
+
+    @ExposureTime.setter
+    def ExposureTime(self, exposure):
+        print('set exposure to', exposure)
+        if exposure == mvsdk.CameraGetExposureTime(self.hCamera):
+            return
+        print(mvsdk.CameraSetExposureTime(self.hCamera, exposure))
+        self.ExposureTimeChanged.emit(mvsdk.CameraGetExposureTime(self.hCamera)) 
+
+    @mvsdk.method(mvsdk.CAMERA_SNAP_PROC)
+    def callback(self, hCamera, pRawData, pFrameHead, pContext):
+        print("frame callback")
+        FrameHead = pFrameHead[0]
+        pFrameBuffer = self.pFrameBuffer
+
+        mvsdk.CameraImageProcess(hCamera, pRawData, pFrameBuffer, FrameHead)
+        mvsdk.CameraReleaseImageBuffer(hCamera, pRawData)
+
+        frame_data = (mvsdk.c_ubyte * FrameHead.uBytes).from_address(pFrameBuffer)
+        frame = np.frombuffer(frame_data, dtype=np.uint8)
+        frame = frame.reshape((FrameHead.iHeight, FrameHead.iWidth, 1 if FrameHead.uiMediaType == mvsdk.CAMERA_MEDIA_TYPE_MONO8 else 3) )
+
+        self.imageChanged.emit(frame)
 
     def begin(self):
-        self.worker = Worker(self.hCamera)
-        self.worker.imageChanged.connect(self.callback, QtCore.Qt.DirectConnection)
-        self.worker.start()
+        
+        cap = mvsdk.CameraGetCapability(self.hCamera)
+        #PrintCapbility(cap)
+
+        monoCamera = (cap.sIspCapacity.bMonoSensor != 0)
+
+        if monoCamera:
+            mvsdk.CameraSetIspOutFormat(self.hCamera, mvsdk.CAMERA_MEDIA_TYPE_MONO8)
+
+        mvsdk.CameraSetTriggerMode(self.hCamera, 2)
+        mvsdk.CameraSetAeState(self.hCamera, 0)
+        mvsdk.CameraSetExposureTime(self.hCamera, 10)
+
+        mvsdk.CameraPlay(self.hCamera)
+
+        
+        FrameBufferSize = cap.sResolutionRange.iWidthMax * cap.sResolutionRange.iHeightMax * (1 if monoCamera else 3)
+        self.pFrameBuffer = mvsdk.CameraAlignMalloc(FrameBufferSize, 16)
+
+
+        mvsdk.CameraSetCallbackFunction(self.hCamera, self.callback, 0)
+
 
     def end(self):
-        self.worker.terminate()
-        self.worker = None
-        self.cap.release()
-
+        mvsdk.CameraUnInit(self.hCamera)
+        mvsdk.CameraAlignFree(self.pFrameBuffer) 

@@ -4,6 +4,7 @@ import signal
 import sys
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.uic import loadUi
+from microscope_esp32_controller_serial import serial_interface_qobject as microscope_serial_qobject
 
 # from video_sender.spin_widget import SpinWidget
 # from video_sender.pyspin_camera import PySpinCamera
@@ -20,11 +21,33 @@ class MainWindow(QtWidgets.QMainWindow):
         self.g.imageChanged.connect(self.camera_callback)
         self.g.begin()
 
-    def camera_callback(self, draw_data, width, height, stride):
-            image = QtGui.QImage(draw_data, height, width, QtGui.QImage.Format_Grayscale8)
-            pixmap = QtGui.QPixmap.fromImage(image)
-            #self.image_view.setFixedSize(s[0], s[1])
-            self.label_2.setPixmap(pixmap)
+
+        self.microscope_esp32_controller_serial = microscope_serial_qobject.SerialInterface('/dev/ttyUSB1')
+        self.microscope_esp32_controller_serial.reset()
+        self.microscope_esp32_controller_serial.messageChanged.connect(self.onMessage2Changed)
+    
+        self.lineEdit.editingFinished.connect(self.editingFinished)
+
+        self.doubleSpinBox.valueChanged.connect(self.exposureChanged)
+
+    def exposureChanged(self, exposure):
+        self.g.ExposureTime = exposure
+        
+    def editingFinished(self):
+        line = self.lineEdit.text
+
+        print("line:", line())
+        self.microscope_esp32_controller_serial.write(line())
+        self.microscope_esp32_controller_serial.write("\n")
+
+    def onMessage2Changed(self, message):
+        print('message2 changed', message)
+        self.textBrowser.append(message)
+
+    def camera_callback(self, draw_data):
+        image = QtGui.QImage(draw_data, draw_data.shape[1], draw_data.shape[0], QtGui.QImage.Format_Grayscale8)
+        pixmap = QtGui.QPixmap.fromImage(image)
+        self.label_2.setPixmap(pixmap)
 
 class QApplication(QtWidgets.QApplication):
     def __init__(self, *args, **kwargs):
