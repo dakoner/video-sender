@@ -40,6 +40,7 @@ class GigECamera(QtCore.QObject):
 
     @ExposureTime.setter
     def ExposureTime(self, exposure):
+        print('current exposure:', mvsdk.CameraGetExposureTime(self.hCamera))
         print('set exposure to', exposure)
         if exposure == mvsdk.CameraGetExposureTime(self.hCamera):
             return
@@ -71,7 +72,7 @@ class GigECamera(QtCore.QObject):
         if monoCamera:
             mvsdk.CameraSetIspOutFormat(self.hCamera, mvsdk.CAMERA_MEDIA_TYPE_MONO8)
 
-        mvsdk.CameraSetTriggerMode(self.hCamera, 2)
+        mvsdk.CameraSetTriggerMode(self.hCamera, 0)
         mvsdk.CameraSetAeState(self.hCamera, 0)
         mvsdk.CameraSetExposureTime(self.hCamera, 10)
 
