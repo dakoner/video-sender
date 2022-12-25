@@ -1,5 +1,4 @@
 from enum import Enum
-import PySpin
 import signal
 import sys
 from PyQt5 import QtGui, QtCore, QtWidgets
@@ -32,7 +31,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def exposureChanged(self, exposure):
         self.g.ExposureTime = exposure
-        
+
     def editingFinished(self):
         line = self.lineEdit.text
 
