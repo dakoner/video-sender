@@ -184,7 +184,8 @@ class GigECamera(QtCore.QObject):
         FrameBufferSize = self.cap.sResolutionRange.iWidthMax * self.cap.sResolutionRange.iHeightMax * (1 if monoCamera else 3)
         self.pFrameBuffer = mvsdk.CameraAlignMalloc(FrameBufferSize, 16)
 
-        self.ExposureTime = mvsdk.CameraGetExposureTime(self.hCamera)
+        #self.ExposureTime = mvsdk.CameraGetExposureTime(self.hCamera)
+        self.ExposureTime = 0
         self.Gamma = mvsdk.CameraGetGamma(self.hCamera)
         self.Contrast = mvsdk.CameraGetContrast(self.hCamera)
         self.Sharpness = mvsdk.CameraGetSharpness(self.hCamera)
