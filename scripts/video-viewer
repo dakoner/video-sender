@@ -42,32 +42,31 @@ class MainWindow(QtWidgets.QMainWindow):
         self.g.HMirror = 0
         self.g.VMirror = 0
 
+        print(self.g.cap)
+        self.horizontalSlider_10.setMinimum(self.g.cap.sExposeDesc.uiExposeTimeMin)
+        self.horizontalSlider_10.setMaximum(self.g.cap.sExposeDesc.uiExposeTimeMax)
+        self.horizontalSlider_10.setValue(self.g.ExposureTime)
+
         self.g.camera_play()
 
     def GammaChanged(self, gamma):
-        print("Gamma changed", gamma)
         self.g.Gamma = gamma
 
     def ContrastChanged(self, contrast):
-        print("Contrast changed", contrast)
         self.g.Contrast = contrast
 
     def SharpnessChanged(self, sharpness):
-        print("sharpness changed", sharpness)
         self.g.Sharpness = sharpness
 
     def AnalogGainChanged(self, analog_gain):
-        print("analog gain changed", analog_gain)
         self.g.AnalogGain = analog_gain
 
     def HMirrorChanged(self, value):
         hmirror = value == QtCore.Qt.Checked
-        print("hmirror changed", hmirror)
         self.g.HMirror = hmirror
     
     def VMirrorChanged(self, value):
         vmirror = value == QtCore.Qt.Checked
-        print("vmirror changed", vmirror)
         self.g.VMirror = vmirror
 
     def enableAuto(self, value):
@@ -76,17 +75,72 @@ class MainWindow(QtWidgets.QMainWindow):
         self.g.AeState = not value
 
     def AeTargetChanged(self, target):
-        print("a")
         self.g.AeTarget = target
 
     def ExposureChanged(self, exposure):
-        print("b", exposure)
         self.g.ExposureTime = exposure
 
     def camera_callback(self, draw_data):
         image = QtGui.QImage(draw_data, draw_data.shape[1], draw_data.shape[0], QtGui.QImage.Format_RGB888)
         pixmap = QtGui.QPixmap.fromImage(image.scaled(1920/2,1080/2))
         self.label.setPixmap(pixmap)
+
+
+# sExposeDesc:
+# uiTargetMin:1
+# uiTargetMax:255
+
+# uiAnalogGainMin:1
+# uiAnalogGainMax:8
+# fAnalogGainStep:1.0
+
+
+# sResolutionRange:
+    # iHeightMax:1080
+    # iHeightMin:0
+    # iWidthMax:1920
+    # iWidthMin:0
+
+# uSkipModeMask:0
+# uBinSumModeMask:0
+# uBinAverageModeMask:0
+# uResampleMask:0
+
+# sRgbGainRange:
+    # iRGainMin:0
+    # iRGainMax:400
+    # iGGainMin:0
+    # iGGainMax:400
+    # iBGainMin:0
+    # iBGainMax:400
+
+# sSaturationRange:
+    # iMin:100
+    # iMax:100
+
+# sGammaRange:
+    # iMin:0
+    # iMax:250
+
+# sContrastRange:
+    # iMin:0
+    # iMax:200
+
+# sSharpnessRange:i
+    # Min:0
+    # iMax:100
+
+# sIspCapacity:bMonoSensor:0
+
+# bWbOnce:1
+# bAutoWb:0
+# bAutoExposure:1
+# bManualExposure:1
+# bAntiFlick:1
+# bDeviceIsp:0
+# bForceUseDeviceIsp:0
+# bZoomHD:0
+# play 0
 
 class QApplication(QtWidgets.QApplication):
     def __init__(self, *args, **kwargs):
