@@ -24,6 +24,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.horizontalSlider.valueChanged.connect(self.AeTargetChanged)
         self.horizontalSlider_10.valueChanged.connect(self.ExposureChanged)
+        self.horizontalSlider_4.valueChanged.connect(self.AnalogGainChanged)
+        self.horizontalSlider_5.valueChanged.connect(self.SharpnessChanged)
+        self.horizontalSlider_2.valueChanged.connect(self.GammaChanged)
+        self.horizontalSlider_3.valueChanged.connect(self.ContrastChanged)
 
         self.checkBox_2.stateChanged.connect(self.VMirrorChanged)
         self.checkBox_3.stateChanged.connect(self.HMirrorChanged)
@@ -31,7 +35,30 @@ class MainWindow(QtWidgets.QMainWindow):
         self.g.begin()
         self.g.AeState = 1
         self.g.TriggerMode = 0
+        self.g.Gamma = 100
+        self.g.Contrast = 130
+        self.g.Sharpness = 0
+        self.g.AnalogGain = 1
+        self.g.HMirror = 0
+        self.g.VMirror = 0
+
         self.g.camera_play()
+
+    def GammaChanged(self, gamma):
+        print("Gamma changed", gamma)
+        self.g.Gamma = gamma
+
+    def ContrastChanged(self, contrast):
+        print("Contrast changed", contrast)
+        self.g.Contrast = contrast
+
+    def SharpnessChanged(self, sharpness):
+        print("sharpness changed", sharpness)
+        self.g.Sharpness = sharpness
+
+    def AnalogGainChanged(self, analog_gain):
+        print("analog gain changed", analog_gain)
+        self.g.AnalogGain = analog_gain
 
     def HMirrorChanged(self, value):
         hmirror = value == QtCore.Qt.Checked
