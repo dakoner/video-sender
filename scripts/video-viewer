@@ -33,16 +33,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.checkBox_3.stateChanged.connect(self.HMirrorChanged)
 
         self.g.begin()
+
         # self.g.AeState = 1
         # self.g.TriggerMode = 0
-        # self.g.Gamma = 100
-        # self.g.Contrast = 130
-        # self.g.Sharpness = 0
-        # self.g.AnalogGain = 1
         # self.g.HMirror = 0
         # self.g.VMirror = 0
 
         print(self.g.cap)
+
+        #TODO(dek): better way to keep UI and properties in sync?
         self.exposureTimeSlider.setMinimum(self.g.cap.sExposeDesc.uiExposeTimeMin)
         self.exposureTimeSlider.setMaximum(self.g.cap.sExposeDesc.uiExposeTimeMax)
         self.exposureTimeSlider.setValue(self.g.ExposureTime)
@@ -51,7 +50,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.AeTargetSlider.setMaximum(self.g.cap.sExposeDesc.uiTargetMax)
         self.AeTargetSlider.setValue(self.g.AeTarget)
 
-        
         self.analogGainSlider.setMinimum(self.g.cap.sExposeDesc.uiAnalogGainMin)
         self.analogGainSlider.setMaximum(self.g.cap.sExposeDesc.uiAnalogGainMax)
         self.analogGainSlider.setValue(self.g.AnalogGain)
@@ -64,7 +62,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.contrastSlider.setMaximum(self.g.cap.sContrastRange.iMax)
         self.contrastSlider.setValue(self.g.Contrast)
 
-        
         self.sharpnessSlider.setMinimum(self.g.cap.sSharpnessRange.iMin)
         self.sharpnessSlider.setMaximum(self.g.cap.sSharpnessRange.iMax)
         self.sharpnessSlider.setValue(self.g.Sharpness)
@@ -110,11 +107,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 # sExposeDesc:
-# uiTargetMin:1
-# uiTargetMax:255
-
-# uiAnalogGainMin:1
-# uiAnalogGainMax:8
 # fAnalogGainStep:1.0
 
 
@@ -141,17 +133,6 @@ class MainWindow(QtWidgets.QMainWindow):
     # iMin:100
     # iMax:100
 
-# sGammaRange:
-    # iMin:0
-    # iMax:250
-
-# sContrastRange:
-    # iMin:0
-    # iMax:200
-
-# sSharpnessRange:i
-    # Min:0
-    # iMax:100
 
 # sIspCapacity:bMonoSensor:0
 
