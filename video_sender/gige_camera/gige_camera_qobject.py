@@ -9,7 +9,11 @@ import mvsdk
 class GigECamera(QtCore.QObject):
     imageChanged = QtCore.pyqtSignal(np.ndarray)
     ExposureTimeChanged = QtCore.pyqtSignal(float)
+    GammaChanged = QtCore.pyqtSignal(float)
+    ContrastChanged = QtCore.pyqtSignal(float)
+    SharpnessChanged = QtCore.pyqtSignal(float)
     TriggerModeChanged = QtCore.pyqtSignal(float)
+    AnalogGainChanged = QtCore.pyqtSignal(float)
     HMirrorChanged = QtCore.pyqtSignal(float)
     VMirrorChanged = QtCore.pyqtSignal(float)
     AeStateChanged = QtCore.pyqtSignal(float)
@@ -36,6 +40,62 @@ class GigECamera(QtCore.QObject):
         except mvsdk.CameraException as e:
             print("CameraInit Failed({}): {}".format(e.error_code, e.message) )
             return
+
+
+
+
+    @QtCore.pyqtProperty(int, notify=GammaChanged)
+    def Gamma(self):
+        return mvsdk.CameraGetGamma(self.hCamera)
+
+    @Gamma.setter
+    def Gamma(self, Gamma):
+        print('current Gamma:', mvsdk.CameraGetGamma(self.hCamera))
+        print('set Gamma to', Gamma)
+        if Gamma == mvsdk.CameraGetGamma(self.hCamera):
+            return
+        print("Result: ", mvsdk.CameraSetGamma(self.hCamera, Gamma))
+        self.GammaChanged.emit(mvsdk.CameraGetGamma(self.hCamera)) 
+
+
+    @QtCore.pyqtProperty(int, notify=ContrastChanged)
+    def Contrast(self):
+        return mvsdk.CameraGetContrast(self.hCamera)
+
+    @Contrast.setter
+    def Contrast(self, Contrast):
+        print('current Contrast:', mvsdk.CameraGetContrast(self.hCamera))
+        print('set Contrast to', Contrast)
+        if Contrast == mvsdk.CameraGetContrast(self.hCamera):
+            return
+        print("Result: ", mvsdk.CameraSetContrast(self.hCamera, Contrast))
+        self.ContrastChanged.emit(mvsdk.CameraGetContrast(self.hCamera)) 
+
+    @QtCore.pyqtProperty(int, notify=SharpnessChanged)
+    def Sharpness(self):
+        return mvsdk.CameraGetSharpness(self.hCamera)
+
+    @Sharpness.setter
+    def Sharpness(self, sharpness):
+        print('current sharpness:', mvsdk.CameraGetSharpness(self.hCamera))
+        print('set sharpness to', sharpness)
+        if sharpness == mvsdk.CameraGetSharpness(self.hCamera):
+            return
+        print("Result: ", mvsdk.CameraSetSharpness(self.hCamera, sharpness))
+        self.SharpnessChanged.emit(mvsdk.CameraGetSharpness(self.hCamera)) 
+
+    @QtCore.pyqtProperty(int, notify=AnalogGainChanged)
+    def AnalogGain(self):
+        return mvsdk.CameraGetAnalogGain(self.hCamera)
+
+    @AnalogGain.setter
+    def AnalogGain(self, gain):
+        print('current gain:', mvsdk.CameraGetAnalogGain(self.hCamera))
+        print('set mode to', gain)
+        if gain == mvsdk.CameraGetAnalogGain(self.hCamera):
+            return
+        print("Result: ", mvsdk.CameraSetAnalogGain(self.hCamera, gain))
+        self.AnalogGainChanged.emit(mvsdk.CameraGetAnalogGain(self.hCamera)) 
 
 
     @QtCore.pyqtProperty(int, notify=VMirrorChanged)
