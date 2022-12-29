@@ -18,35 +18,48 @@ class MainWindow(QtWidgets.QMainWindow):
         
         self.g = gige_camera_qobject.GigECamera()
         self.g.imageChanged.connect(self.camera_callback)
+
+        self.radioButton_3.toggled.connect(lambda value: self.groupBox_2.setEnabled(value))
+        self.radioButton_23.toggled.connect(self.enableAuto)
+
+        self.horizontalSlider.valueChanged.connect(self.AeTargetChanged)
+        self.horizontalSlider_10.valueChanged.connect(self.ExposureChanged)
+
+        self.checkBox_2.stateChanged.connect(self.VMirrorChanged)
+        self.checkBox_3.stateChanged.connect(self.HMirrorChanged)
+
         self.g.begin()
+        self.g.AeState = 1
+        self.g.TriggerMode = 0
+        self.g.camera_play()
 
-
-        self.microscope_esp32_controller_serial = microscope_serial_qobject.SerialInterface('/dev/ttyUSB1')
-        self.microscope_esp32_controller_serial.reset()
-        self.microscope_esp32_controller_serial.messageChanged.connect(self.onMessage2Changed)
+    def HMirrorChanged(self, value):
+        hmirror = value == QtCore.Qt.Checked
+        print("hmirror changed", hmirror)
+        self.g.HMirror = hmirror
     
-        self.lineEdit.editingFinished.connect(self.editingFinished)
+    def VMirrorChanged(self, value):
+        vmirror = value == QtCore.Qt.Checked
+        print("vmirror changed", vmirror)
+        self.g.VMirror = vmirror
 
-        self.doubleSpinBox.valueChanged.connect(self.exposureChanged)
+    def enableAuto(self, value):
+        self.groupBox_6.setEnabled(value)
+        self.groupBox_5.setEnabled(not value)
+        self.g.AeState = not value
 
-    def exposureChanged(self, exposure):
+    def AeTargetChanged(self, target):
+        print("a")
+        self.g.AeTarget = target
+
+    def ExposureChanged(self, exposure):
+        print("b", exposure)
         self.g.ExposureTime = exposure
 
-    def editingFinished(self):
-        line = self.lineEdit.text
-
-        print("line:", line())
-        self.microscope_esp32_controller_serial.write(line())
-        self.microscope_esp32_controller_serial.write("\n")
-
-    def onMessage2Changed(self, message):
-        print('message2 changed', message)
-        self.textBrowser.append(message)
-
     def camera_callback(self, draw_data):
-        image = QtGui.QImage(draw_data, draw_data.shape[1], draw_data.shape[0], QtGui.QImage.Format_Grayscale8)
-        pixmap = QtGui.QPixmap.fromImage(image)
-        self.label_2.setPixmap(pixmap)
+        image = QtGui.QImage(draw_data, draw_data.shape[1], draw_data.shape[0], QtGui.QImage.Format_RGB888)
+        pixmap = QtGui.QPixmap.fromImage(image.scaled(1920/2,1080/2))
+        self.label.setPixmap(pixmap)
 
 class QApplication(QtWidgets.QApplication):
     def __init__(self, *args, **kwargs):
