@@ -663,6 +663,13 @@
                    </property>
                   </widget>
                  </item>
+                 <item>
+                  <widget class="QLabel" name="AeTargetLabel">
+                   <property name="text">
+                    <string>TextLabel</string>
+                   </property>
+                  </widget>
+                 </item>
                 </layout>
                </widget>
               </item>
@@ -1308,7 +1315,24 @@
   </widget>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>AeTargetSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>AeTargetLabel</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>227</x>
+     <y>597</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>327</x>
+     <y>607</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
  <buttongroups>
   <buttongroup name="buttonGroup"/>
  </buttongroups>

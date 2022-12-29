@@ -22,7 +22,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.radioButton_3.toggled.connect(lambda value: self.groupBox_2.setEnabled(value))
         self.radioButton_23.toggled.connect(self.enableAuto)
 
-        self.AeTargetSlider.valueChanged.connect(self.AeTargetChanged)
         self.exposureTimeSlider.valueChanged.connect(self.ExposureTimeChanged)
         self.analogGainSlider.valueChanged.connect(self.AnalogGainChanged)
         self.sharpnessSlider.valueChanged.connect(self.SharpnessChanged)
@@ -34,21 +33,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.g.begin()
 
-        # self.g.AeState = 1
-        # self.g.TriggerMode = 0
-        # self.g.HMirror = 0
-        # self.g.VMirror = 0
-
-        print(self.g.cap)
-
         #TODO(dek): better way to keep UI and properties in sync?
+
+        self.g.AeTargetChanged.connect(lambda value: self.AeTargetSlider.setValue(value))
+        self.AeTargetSlider.valueChanged.connect(self.AeTargetChanged)
+        self.AeTargetLabel.setText(str(self.g.AeTarget))
+        self.AeTargetSlider.setMinimum(self.g.cap.sExposeDesc.uiTargetMin)
+        self.AeTargetSlider.setMaximum(self.g.cap.sExposeDesc.uiTargetMax)
+
         self.exposureTimeSlider.setMinimum(self.g.cap.sExposeDesc.uiExposeTimeMin)
         self.exposureTimeSlider.setMaximum(self.g.cap.sExposeDesc.uiExposeTimeMax)
         self.exposureTimeSlider.setValue(self.g.ExposureTime)
-
-        self.AeTargetSlider.setMinimum(self.g.cap.sExposeDesc.uiTargetMin)
-        self.AeTargetSlider.setMaximum(self.g.cap.sExposeDesc.uiTargetMax)
-        self.AeTargetSlider.setValue(self.g.AeTarget)
 
         self.analogGainSlider.setMinimum(self.g.cap.sExposeDesc.uiAnalogGainMin)
         self.analogGainSlider.setMaximum(self.g.cap.sExposeDesc.uiAnalogGainMax)
