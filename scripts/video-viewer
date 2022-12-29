@@ -22,30 +22,53 @@ class MainWindow(QtWidgets.QMainWindow):
         self.radioButton_3.toggled.connect(lambda value: self.groupBox_2.setEnabled(value))
         self.radioButton_23.toggled.connect(self.enableAuto)
 
-        self.horizontalSlider.valueChanged.connect(self.AeTargetChanged)
-        self.horizontalSlider_10.valueChanged.connect(self.ExposureChanged)
-        self.horizontalSlider_4.valueChanged.connect(self.AnalogGainChanged)
-        self.horizontalSlider_5.valueChanged.connect(self.SharpnessChanged)
-        self.horizontalSlider_2.valueChanged.connect(self.GammaChanged)
-        self.horizontalSlider_3.valueChanged.connect(self.ContrastChanged)
+        self.AeTargetSlider.valueChanged.connect(self.AeTargetChanged)
+        self.exposureTimeSlider.valueChanged.connect(self.ExposureTimeChanged)
+        self.analogGainSlider.valueChanged.connect(self.AnalogGainChanged)
+        self.sharpnessSlider.valueChanged.connect(self.SharpnessChanged)
+        self.gammaSlider.valueChanged.connect(self.GammaChanged)
+        self.contrastSlider.valueChanged.connect(self.ContrastChanged)
 
         self.checkBox_2.stateChanged.connect(self.VMirrorChanged)
         self.checkBox_3.stateChanged.connect(self.HMirrorChanged)
 
         self.g.begin()
-        self.g.AeState = 1
-        self.g.TriggerMode = 0
-        self.g.Gamma = 100
-        self.g.Contrast = 130
-        self.g.Sharpness = 0
-        self.g.AnalogGain = 1
-        self.g.HMirror = 0
-        self.g.VMirror = 0
+        # self.g.AeState = 1
+        # self.g.TriggerMode = 0
+        # self.g.Gamma = 100
+        # self.g.Contrast = 130
+        # self.g.Sharpness = 0
+        # self.g.AnalogGain = 1
+        # self.g.HMirror = 0
+        # self.g.VMirror = 0
 
         print(self.g.cap)
-        self.horizontalSlider_10.setMinimum(self.g.cap.sExposeDesc.uiExposeTimeMin)
-        self.horizontalSlider_10.setMaximum(self.g.cap.sExposeDesc.uiExposeTimeMax)
-        self.horizontalSlider_10.setValue(self.g.ExposureTime)
+        self.exposureTimeSlider.setMinimum(self.g.cap.sExposeDesc.uiExposeTimeMin)
+        self.exposureTimeSlider.setMaximum(self.g.cap.sExposeDesc.uiExposeTimeMax)
+        self.exposureTimeSlider.setValue(self.g.ExposureTime)
+
+        self.AeTargetSlider.setMinimum(self.g.cap.sExposeDesc.uiTargetMin)
+        self.AeTargetSlider.setMaximum(self.g.cap.sExposeDesc.uiTargetMax)
+        self.AeTargetSlider.setValue(self.g.AeTarget)
+
+        
+        self.analogGainSlider.setMinimum(self.g.cap.sExposeDesc.uiAnalogGainMin)
+        self.analogGainSlider.setMaximum(self.g.cap.sExposeDesc.uiAnalogGainMax)
+        self.analogGainSlider.setValue(self.g.AnalogGain)
+    
+        self.gammaSlider.setMinimum(self.g.cap.sGammaRange.iMin)
+        self.gammaSlider.setMaximum(self.g.cap.sGammaRange.iMax)
+        self.gammaSlider.setValue(self.g.Gamma)
+
+        self.contrastSlider.setMinimum(self.g.cap.sContrastRange.iMin)
+        self.contrastSlider.setMaximum(self.g.cap.sContrastRange.iMax)
+        self.contrastSlider.setValue(self.g.Contrast)
+
+        
+        self.sharpnessSlider.setMinimum(self.g.cap.sSharpnessRange.iMin)
+        self.sharpnessSlider.setMaximum(self.g.cap.sSharpnessRange.iMax)
+        self.sharpnessSlider.setValue(self.g.Sharpness)
+
 
         self.g.camera_play()
 
@@ -77,7 +100,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def AeTargetChanged(self, target):
         self.g.AeTarget = target
 
-    def ExposureChanged(self, exposure):
+    def ExposureTimeChanged(self, exposure):
         self.g.ExposureTime = exposure
 
     def camera_callback(self, draw_data):
