@@ -1,0 +1,64 @@
+from enum import Enum
+import signal
+import sys
+from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5.uic import loadUi
+
+from video_sender.pyspin_camera import pyspin_camera_qobject
+
+        
+
+class MainWindow(QtWidgets.QMainWindow):
+    
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        loadUi("spin_video_viewer.ui", self)
+
+
+        self.camera = pyspin_camera_qobject.PySpinCamera()
+        self.camera.imageChanged.connect(self.camera_callback)
+        self.setContinuous()
+
+        self.camera.startWorker()
+        self.camera.begin()
+
+
+    def setContinuous(self):
+        self.camera.AcquisitionMode = 'Continuous'
+        self.camera.ExposureAuto = 'Off'
+        self.camera.ExposureMode = 'Timed'
+        self.camera.ExposureTime = 251
+        self.camera.TriggerMode = 'Off'
+        self.camera.StreamBufferHandlingMode = 'NewestOnly'
+
+    def setTrigger(self):
+        #self.camera.AcquisitionMode = 'SingleFrame'
+        self.camera.ExposureAuto = 'Off'
+        self.camera.ExposureMode = 'TriggerWidth'
+        #self.camera.TriggerMode = 'On'
+        self.camera.TriggerSource = "Line3"
+        self.camera.TriggerSelector = 'FrameStart'
+        self.camera.TriggerActivation = 'RisingEdge'
+        self.camera.StreamBufferHandlingMode = 'NewestOnly'
+
+
+    def camera_callback(self, draw_data):
+        print(draw_data.shape)
+        image = QtGui.QImage(draw_data, draw_data.shape[1], draw_data.shape[0], QtGui.QImage.Format_Grayscale8)
+        pixmap = QtGui.QPixmap.fromImage(image.scaled(1440/2,1080/2))
+        self.label.setPixmap(pixmap)
+
+
+class QApplication(QtWidgets.QApplication):
+    def __init__(self, *args, **kwargs):
+        super(QApplication, self).__init__(*args, **kwargs)
+
+        self.main_window = MainWindow()
+        self.main_window.show()
+
+if __name__ == '__main__':
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    app = QApplication(sys.argv)
+    app.exec_()
+
