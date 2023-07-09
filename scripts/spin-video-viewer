@@ -18,7 +18,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.camera = pyspin_camera_qobject.PySpinCamera()
         self.camera.imageChanged.connect(self.camera_callback)
-        self.setContinuous()
+	#self.setContinuous()
+        self.setTrigger()
 
         self.camera.startWorker()
         self.camera.begin()
@@ -33,11 +34,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.camera.StreamBufferHandlingMode = 'NewestOnly'
 
     def setTrigger(self):
-        #self.camera.AcquisitionMode = 'SingleFrame'
+        self.camera.AcquisitionMode = 'SingleFrame'
         self.camera.ExposureAuto = 'Off'
-        self.camera.ExposureMode = 'TriggerWidth'
-        #self.camera.TriggerMode = 'On'
-        self.camera.TriggerSource = "Line3"
+        #self.camera.ExposureMode = 'TriggerWidth'
+        self.camera.ExposureMode = 'Timed'
+        self.camera.ExposureTime = 251
+        self.camera.TriggerMode = 'On'
+        self.camera.TriggerSource = "Line0"
         self.camera.TriggerSelector = 'FrameStart'
         self.camera.TriggerActivation = 'RisingEdge'
         self.camera.StreamBufferHandlingMode = 'NewestOnly'

@@ -7,8 +7,8 @@ import simplejpeg
 import sys
 import numpy as np
 
-from video_sender.pyspin_camera import pyspin_camera_qobject
-from video_sender.uvc_camera import uvc_camera_qobject
+#from video_sender.pyspin_camera import pyspin_camera_qobject
+#from video_sender.uvc_camera import uvc_camera_qobject
 from video_sender.gige_camera import gige_camera_qobject
 
 port = 5000
